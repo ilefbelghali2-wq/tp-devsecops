@@ -49,10 +49,33 @@ jobs:
           java-version: '21'
           cache: maven
 
+        # Configurer un miroir Maven (évite l'erreur 429)
+      - name: Configure Maven mirror
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml <<'EOF'
+          <settings>
+            <mirrors>
+              <mirror>
+                <id>google-maven-central</id>
+                <mirrorOf>central</mirrorOf>
+                <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
+              </mirror>
+            </mirrors>
+          </settings>
+          EOF
+
       # Compiler le projet (crée le JAR dans target/)
       - name: Build with Maven
-        run: mvn -B clean package -DskipTests
-              # SonarCloud scan (après la compilation)
+        run: |
+          for i in 1 2 3 4 5; do
+            mvn -B clean package -DskipTests && break
+            echo "Tentative $i échouée, nouvelle tentative dans 60 s..."
+            sleep 60
+          done
+          test -d target
+
+      # SonarCloud scan (après la compilation)
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
