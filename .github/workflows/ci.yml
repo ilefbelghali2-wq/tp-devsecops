@@ -52,6 +52,17 @@ jobs:
       # Compiler le projet (crée le JAR dans target/)
       - name: Build with Maven
         run: mvn -B clean package -DskipTests
+              # SonarCloud scan (après la compilation)
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: .
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.java.binaries=target/classes
 
       # Build Docker image
       - name: Build Docker image
